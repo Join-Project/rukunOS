@@ -50,8 +50,14 @@ clean:
 migrate:
 	cd backend && ./scripts/run-migrations.sh docker
 
+migrate-prod:
+	./scripts/deploy.sh migrate
+
 backup:
 	./scripts/backup-db.sh
+
+backup-prod:
+	./scripts/deploy.sh backup
 
 # Shell access
 shell-api:
@@ -61,6 +67,12 @@ shell-db:
 	docker compose exec db psql -U {{PROJECT_NAME}}_user -d {{PROJECT_NAME}}_db
 
 # Production
+prod-setup:
+	./scripts/deploy.sh setup
+
+prod-migrate:
+	./scripts/deploy.sh migrate
+
 prod-up:
 	docker compose -f docker-compose.prod.yml up -d --build
 
@@ -72,4 +84,7 @@ prod-logs:
 
 prod-restart:
 	docker compose -f docker-compose.prod.yml restart
+
+prod-update:
+	./scripts/deploy.sh update
 

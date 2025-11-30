@@ -94,6 +94,65 @@ docker compose exec api sh -c "cd /app && psql -h db -U rukunos_user -d rukunos_
 
 Lihat `.env.example` untuk daftar environment variables yang diperlukan.
 
+## 🚀 Deployment ke VPS
+
+Untuk deployment ke VPS server, lihat dokumentasi lengkap di [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+### Quick Start Deployment
+
+```bash
+# 1. Clone repository di VPS
+git clone https://github.com/Join-Project/rukunOS.git
+cd rukunOS
+
+# 2. Setup environment
+cp .env.example .env
+nano .env  # Edit dengan konfigurasi production
+
+# 3. Setup database
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh setup
+
+# 4. Jalankan migrations
+./scripts/deploy.sh migrate
+
+# 5. Start aplikasi
+./scripts/deploy.sh start
+
+# Atau menggunakan Makefile
+make prod-setup
+make prod-migrate
+make prod-up
+```
+
+### Commands Deployment
+
+```bash
+# Setup awal
+./scripts/deploy.sh setup
+
+# Jalankan migrations
+./scripts/deploy.sh migrate
+
+# Start services
+./scripts/deploy.sh start
+
+# Stop services
+./scripts/deploy.sh stop
+
+# Restart services
+./scripts/deploy.sh restart
+
+# Update aplikasi
+./scripts/deploy.sh update
+
+# Backup database
+./scripts/deploy.sh backup
+
+# Lihat logs
+./scripts/deploy.sh logs
+```
+
 ## 📝 License
 
 MIT License
