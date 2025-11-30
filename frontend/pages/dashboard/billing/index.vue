@@ -1,16 +1,16 @@
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Manajemen Tagihan</h1>
-        <p class="text-gray-500">Kelola tagihan warga, pantau status pembayaran, dan kirim pengingat.</p>
+        <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Manajemen Tagihan</h1>
+        <p class="text-sm md:text-base text-gray-500 mt-1">Kelola tagihan warga, pantau status pembayaran, dan kirim pengingat.</p>
       </div>
-      <div class="flex gap-3">
-        <NuxtLink to="/dashboard/billing/reports" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors shadow-sm">
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <NuxtLink to="/dashboard/billing/reports" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors shadow-sm text-sm md:text-base text-center">
           Laporan Keuangan
         </NuxtLink>
-        <NuxtLink to="/dashboard/billing/create" class="px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center">
+        <NuxtLink to="/dashboard/billing/create" class="px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center justify-center text-sm md:text-base">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           Buat Tagihan
         </NuxtLink>
@@ -72,8 +72,8 @@
       </div>
     </div>
 
-    <!-- Bills Table -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- Bills Table - Desktop -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hidden md:block">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -198,10 +198,10 @@
         </table>
       </div>
       <!-- Pagination -->
-      <div v-if="pagination.total_pages > 1" class="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
-        <div class="flex-1 flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-700">
+      <div v-if="pagination.total_pages > 1" class="bg-white px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 sm:px-6">
+        <div class="flex-1 flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+          <div class="text-center sm:text-left">
+            <p class="text-xs sm:text-sm text-gray-700">
               Menampilkan <span class="font-medium">{{ (pagination.page - 1) * pagination.limit + 1 }}</span> sampai
               <span class="font-medium">{{ Math.min(pagination.page * pagination.limit, pagination.total) }}</span> dari
               <span class="font-medium">{{ pagination.total }}</span> tagihan
@@ -248,9 +248,162 @@
       </div>
     </div>
 
+    <!-- Bills Cards - Mobile -->
+    <div class="md:hidden space-y-4">
+      <div v-if="!loading && bills.length === 0" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+        <div class="text-gray-400">
+          <Icon name="heroicons:document-text" class="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p class="text-sm">Belum ada tagihan</p>
+        </div>
+      </div>
+      <div
+        v-for="bill in bills"
+        :key="bill.id"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3"
+      >
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="flex-shrink-0 h-10 w-10 bg-primary-100 rounded-lg flex items-center justify-center text-primary-700 font-bold text-sm">
+                {{ bill.unit_code || '-' }}
+              </div>
+              <div>
+                <div class="text-sm font-medium text-gray-900">{{ bill.unit_code || '-' }}</div>
+                <div class="text-xs text-gray-500">{{ bill.unit_type || '-' }}</div>
+              </div>
+            </div>
+            <div class="text-xs font-mono text-gray-500 mb-1">No: {{ bill.bill_number || '-' }}</div>
+          </div>
+          <div class="relative" @click.stop>
+            <button
+              @click.stop="toggleActionsMenu(bill.id)"
+              type="button"
+              class="text-gray-400 hover:text-primary-600 transition-colors focus:outline-none p-1"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+            </button>
+            <Transition
+              enter-active-class="transition ease-out duration-100"
+              enter-from-class="transform opacity-0 scale-95"
+              enter-to-class="transform opacity-100 scale-100"
+              leave-active-class="transition ease-in duration-75"
+              leave-from-class="transform opacity-100 scale-100"
+              leave-to-class="transform opacity-0 scale-95"
+            >
+              <div
+                v-if="showActionsMenu === bill.id"
+                class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                @click.stop
+              >
+                <div class="py-1">
+                  <button
+                    @click.stop="viewBill(bill.id)"
+                    type="button"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Lihat Detail
+                  </button>
+                  <button
+                    @click.stop="editBill(bill.id)"
+                    type="button"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Edit
+                  </button>
+                  <button
+                    @click.stop="deleteBill(bill.id)"
+                    type="button"
+                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </Transition>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Periode</div>
+            <div class="text-sm font-medium text-gray-900">{{ bill.period }}</div>
+            <div class="text-xs text-gray-500">{{ bill.category }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Jatuh Tempo</div>
+            <div class="text-sm text-gray-900">{{ formatDate(bill.due_date) }}</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Jumlah</div>
+            <div class="text-base font-bold text-gray-900">Rp {{ (bill.total_amount || bill.amount || 0).toLocaleString('id-ID') }}</div>
+            <div v-if="bill.late_fee > 0" class="text-xs text-red-500">+ Denda Rp {{ bill.late_fee.toLocaleString('id-ID') }}</div>
+          </div>
+          <span 
+            :class="[
+              'px-2.5 py-1 rounded-full text-xs font-medium border',
+              statusClasses[bill.status] || 'bg-gray-100 text-gray-800 border-gray-200'
+            ]"
+          >
+            {{ statusLabels[bill.status] || bill.status }}
+          </span>
+        </div>
+      </div>
+      
+      <!-- Mobile Pagination -->
+      <div v-if="pagination.total_pages > 1" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <div class="flex flex-col items-center gap-4">
+          <p class="text-xs text-gray-700 text-center">
+            Halaman <span class="font-medium">{{ pagination.page }}</span> dari
+            <span class="font-medium">{{ pagination.total_pages }}</span>
+          </p>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <button
+              @click="pagination.page > 1 && (pagination.page--, loadBills())"
+              :disabled="pagination.page === 1"
+              class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button
+              v-for="page in Math.min(5, pagination.total_pages)"
+              :key="page"
+              @click="pagination.page = page; loadBills()"
+              :class="[
+                'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                pagination.page === page
+                  ? 'z-10 bg-primary-50 border-primary-500 text-primary-600'
+                  : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+              ]"
+            >
+              {{ page }}
+            </button>
+            <button
+              @click="pagination.page < pagination.total_pages && (pagination.page++, loadBills())"
+              :disabled="pagination.page >= pagination.total_pages"
+              class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+
     <!-- View Bill Modal -->
-    <div v-if="showViewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showViewModal = false">
-      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div v-if="showViewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showViewModal = false">
+      <div class="bg-white rounded-2xl p-4 md:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-lg font-bold text-gray-900">Detail Tagihan</h3>
           <button @click="showViewModal = false" class="text-gray-400 hover:text-gray-600">
@@ -259,7 +412,7 @@
         </div>
         
         <div v-if="viewingBill" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="text-sm font-medium text-gray-500">Unit</label>
               <p class="text-sm text-gray-900 mt-1">{{ viewingBill.unit_code || '-' }} ({{ viewingBill.unit_type || '-' }})</p>
@@ -319,8 +472,8 @@
     </div>
 
     <!-- Edit Bill Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showEditModal = false">
-      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showEditModal = false">
+      <div class="bg-white rounded-2xl p-4 md:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-lg font-bold text-gray-900">Edit Tagihan</h3>
           <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-600">
@@ -360,7 +513,7 @@
             >
           </div>
           
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Tagihan</label>
               <input
@@ -412,7 +565,7 @@
             ></textarea>
           </div>
           
-          <div class="flex gap-3 mt-6">
+          <div class="flex flex-col sm:flex-row gap-3 mt-6">
             <button
               @click="showEditModal = false"
               class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

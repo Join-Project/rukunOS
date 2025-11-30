@@ -1,12 +1,12 @@
 <template>
   <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Manajemen Warga & Pengguna</h1>
-        <p class="text-gray-500">Kelola data warga, peran (role), dan status akun.</p>
+        <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Manajemen Warga & Pengguna</h1>
+        <p class="text-sm md:text-base text-gray-500 mt-1">Kelola data warga, peran (role), dan status akun.</p>
       </div>
-      <button @click="openModal()" class="px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center">
+      <button @click="openModal()" class="px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 flex items-center justify-center text-sm md:text-base">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
         Tambah Warga
       </button>
@@ -45,8 +45,8 @@
       </div>
     </div>
 
-    <!-- Users Table -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- Users Table - Desktop -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hidden md:block">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -113,6 +113,68 @@
         </table>
       </div>
     </div>
+
+    <!-- Users Cards - Mobile -->
+    <div class="md:hidden space-y-4">
+      <div v-if="!loading && users.length === 0" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+        <div class="text-gray-400">
+          <Icon name="heroicons:users" class="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p class="text-sm">Belum ada pengguna</p>
+        </div>
+      </div>
+      <div
+        v-for="user in users"
+        :key="user.id"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3"
+      >
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3 flex-1">
+            <div class="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold">
+              {{ user.full_name?.charAt(0).toUpperCase() }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900 truncate">{{ user.full_name }}</div>
+              <div class="text-xs text-gray-500 truncate">{{ user.email }}</div>
+            </div>
+          </div>
+          <button @click="openModal(user)" class="text-primary-600 hover:text-primary-900 text-sm font-medium px-2">
+            Edit
+          </button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Role</div>
+            <span v-if="user.role" class="inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 px-2 py-0.5">
+              {{ user.role.name }}
+            </span>
+            <span v-else class="text-xs text-gray-400">-</span>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Status</div>
+            <span 
+              :class="[
+                'inline-flex text-xs leading-5 font-semibold rounded-full px-2 py-0.5',
+                user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              ]"
+            >
+              {{ user.status === 'active' ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="pt-2 border-t border-gray-100">
+          <div class="text-xs text-gray-500 mb-1">Unit</div>
+          <span v-if="user.unit" class="text-sm text-gray-900 font-medium">{{ user.unit.code }}</span>
+          <span v-else class="text-sm text-gray-400 italic">Belum ter-assign</span>
+        </div>
+        
+        <div class="pt-2 border-t border-gray-100">
+          <div class="text-xs text-gray-500 mb-1">Bergabung</div>
+          <div class="text-sm text-gray-900">{{ formatDate(user.created_at) }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Add/Edit Modal -->
@@ -120,7 +182,7 @@
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="closeModal"></div>
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-      <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full w-full max-h-[90vh] overflow-y-auto">
         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <div class="sm:flex sm:items-start">
             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">

@@ -24,3 +24,4 @@ CREATE TRIGGER update_billing_template_amount_rules_updated_at
 
 
 
+

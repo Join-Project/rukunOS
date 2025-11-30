@@ -52,3 +52,4 @@ CREATE TRIGGER generate_bill_number_trigger
 
 
 
+

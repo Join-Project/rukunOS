@@ -30,3 +30,4 @@ CREATE INDEX IF NOT EXISTS idx_billing_templates_is_active ON billing_templates(
 
 
 
+
