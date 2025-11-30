@@ -40,9 +40,17 @@ CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role
 CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions(permission_id);
 
 -- Add foreign key constraint for role_id in tenant_users
-ALTER TABLE tenant_users 
-    ADD CONSTRAINT IF NOT EXISTS fk_tenant_users_role_id 
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'fk_tenant_users_role_id'
+    ) THEN
+        ALTER TABLE tenant_users 
+            ADD CONSTRAINT fk_tenant_users_role_id 
+            FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- Trigger untuk auto-update updated_at
 DROP TRIGGER IF EXISTS update_roles_updated_at ON roles;

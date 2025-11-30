@@ -23,9 +23,17 @@ CREATE INDEX IF NOT EXISTS idx_units_type ON units(type) WHERE deleted_at IS NUL
 CREATE INDEX IF NOT EXISTS idx_units_code ON units(code) WHERE deleted_at IS NULL;
 
 -- Add foreign key constraint for unit_id in tenant_users
-ALTER TABLE tenant_users 
-    ADD CONSTRAINT IF NOT EXISTS fk_tenant_users_unit_id 
-    FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE SET NULL;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'fk_tenant_users_unit_id'
+    ) THEN
+        ALTER TABLE tenant_users 
+            ADD CONSTRAINT fk_tenant_users_unit_id 
+            FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- Trigger untuk auto-update updated_at
 DROP TRIGGER IF EXISTS update_units_updated_at ON units;
