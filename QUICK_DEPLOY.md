@@ -90,19 +90,54 @@ git pull origin main
 
 ## Troubleshooting
 
-**Database tidak connect:**
+### Database tidak connect:
 ```bash
-docker-compose -f docker-compose.prod.yml logs db
+docker compose -f docker-compose.prod.yml logs db
 ```
 
-**Port sudah digunakan:**
+### Port sudah digunakan:
 ```bash
 sudo netstat -tulpn | grep :8086
 ```
 
-**Lihat semua logs:**
+### API tidak merespons / "Failed to fetch":
+```bash
+# 1. Cek status semua containers
+docker compose -f docker-compose.prod.yml ps
+
+# 2. Cek log API container
+docker compose -f docker-compose.prod.yml logs api
+
+# 3. Test API dari host
+curl http://localhost:8086/health
+curl http://localhost:8086/
+
+# 4. Cek apakah API container berjalan
+docker compose -f docker-compose.prod.yml ps api
+
+# 5. Restart API container
+docker compose -f docker-compose.prod.yml restart api
+
+# 6. Jika API tidak start, cek error:
+docker compose -f docker-compose.prod.yml logs --tail=50 api
+```
+
+### Frontend tidak bisa connect ke API:
+```bash
+# 1. Pastikan NUXT_API_INTERNAL sudah di-set di docker-compose.prod.yml
+# 2. Pastikan CORS_ALLOWED_ORIGINS sudah di-set di .env
+# 3. Restart semua services
+docker compose -f docker-compose.prod.yml restart
+
+# 4. Rebuild containers jika perlu
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### Lihat semua logs:
 ```bash
 ./scripts/deploy.sh logs
+# atau
+docker compose -f docker-compose.prod.yml logs -f
 ```
 
 ## Dokumentasi Lengkap

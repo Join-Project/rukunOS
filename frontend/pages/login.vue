@@ -126,8 +126,16 @@ const handleLogin = async () => {
       })
     })
 
-    // Set token
+    // Validate token exists
+    if (!response.token) {
+      throw new Error('Token tidak diterima dari server')
+    }
+
+    // Set token first
     authStore.setToken(response.token)
+    
+    // Wait a bit to ensure token is saved to cookie
+    await new Promise(resolve => setTimeout(resolve, 100))
 
     // Map user data to match User interface
     const userData = {

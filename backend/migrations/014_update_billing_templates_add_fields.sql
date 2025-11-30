@@ -28,3 +28,5 @@ WHERE is_active IS NULL;
 CREATE INDEX IF NOT EXISTS idx_billing_templates_is_active ON billing_templates(tenant_id, is_active) WHERE deleted_at IS NULL AND is_active = true;
 
 
+
+

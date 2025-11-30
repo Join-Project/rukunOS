@@ -327,3 +327,5 @@ Jika mengalami masalah, cek:
 2. Status containers: `docker-compose -f docker-compose.prod.yml ps`
 3. Resource usage: `docker stats`
 
+
+

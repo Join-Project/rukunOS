@@ -39,3 +39,5 @@ CREATE TRIGGER update_visitor_logs_updated_at
 
 
 
+
+

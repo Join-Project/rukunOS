@@ -15,16 +15,19 @@ export interface User {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+    // Use secure only if HTTPS, not just in production
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    
     const token = useCookie<string | null>('token', {
         maxAge: 60 * 60 * 24 * 3, // 3 days
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
+        secure: isSecure
     })
     
     const user = useCookie<User | null>('user', {
         maxAge: 60 * 60 * 24 * 3, // 3 days
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
+        secure: isSecure
     })
 
     const isAuthenticated = computed(() => !!token.value)
@@ -33,7 +36,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     function setToken(newToken: string) {
+        if (!newToken) {
+            console.warn('Attempting to set empty token')
+            return
+        }
         token.value = newToken
+        console.log('Token set successfully, length:', newToken.length)
     }
 
     function setUser(newUser: User) {
@@ -43,6 +51,11 @@ export const useAuthStore = defineStore('auth', () => {
     async function fetchCurrentUser() {
         const { fetch } = useApi()
         try {
+            if (!token.value) {
+                console.error('No token available when fetching current user')
+                return null
+            }
+            console.log('Fetching current user with token, length:', token.value.length)
             const currentUser = await fetch<User>('/api/me')
             // Merge dengan data user yang sudah ada untuk preserve role_name jika ada
             if (user.value && currentUser) {

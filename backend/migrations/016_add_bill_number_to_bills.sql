@@ -50,3 +50,5 @@ CREATE TRIGGER generate_bill_number_trigger
     EXECUTE FUNCTION generate_bill_number();
 
 
+
+

@@ -20,6 +20,8 @@ export const useApi = () => {
         // Add auth token if available
         if (authStore.token) {
             headers['Authorization'] = `Bearer ${authStore.token}`
+        } else {
+            console.warn('No token available for request to:', url)
         }
 
         try {
