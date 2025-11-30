@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: rukunos-db
+    environment:
+      POSTGRES_USER: rukunos_user
+      POSTGRES_PASSWORD: rukunos_password
+      POSTGRES_DB: rukunos_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rukunos-network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rukunos-api
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_USER: rukunos_user
+      DB_PASSWORD: rukunos_password
+      DB_NAME: rukunos_db
+      DB_PORT: 5432
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-http://localhost:8080/api/auth/google/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:-secret}
+    depends_on:
+      - db
+    networks:
+      - rukunos-network
+    command: go run main.go
+    volumes:
+      - ./backend:/app
+
+  app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: rukunos-app
+    ports:
+      - "3000:3000"
+    environment:
+      NUXT_PUBLIC_API_BASE: http://localhost:8080
+      NODE_ENV: development
+    depends_on:
+      - api
+    networks:
+      - rukunos-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - nuxt_cache:/app/.nuxt
+    command: sh -c "npm run postinstall && npm run dev"
+
+networks:
+  rukunos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  nuxt_cache:
+

@@ -1,0 +1,63 @@
+# Environment & Configuration Files
+.env
+.env.*
+!.env.example
+
+# Go Backend
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+backend/bin/
+backend/vendor/
+*.test
+*.out
+
+# Vue/Nuxt Frontend
+frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/.nitro/
+frontend/.cache/
+frontend/dist/
+frontend/.vite/
+
+# Docker
+postgres_data/
+docker-data/
+*.log
+
+# Database
+*.db
+*.sqlite
+pgdata/
+backups/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+*.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Build artifacts
+build/
+dist/
+out/
+

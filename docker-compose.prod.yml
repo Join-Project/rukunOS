@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: rukunos-db-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-rukunos_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rukunos_password}
+      POSTGRES_DB: ${DB_NAME:-rukunos_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - rukunos-network
+    ports:
+      - "127.0.0.1:5433:5432"
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rukunos-api-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8086:8080"
+    environment:
+      DB_HOST: ${DB_HOST:-db}
+      DB_USER: ${DB_USER:-rukunos_user}
+      DB_PASSWORD: ${DB_PASSWORD:-rukunos_password}
+      DB_NAME: ${DB_NAME:-rukunos_db}
+      DB_PORT: ${DB_PORT:-5432}
+      PORT: ${PORT:-8080}
+      JWT_SECRET: ${JWT_SECRET:-secret}
+      ENV: ${ENV:-production}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      - db
+    networks:
+      - rukunos-network
+    volumes:
+      - ./backend:/app
+    command: sh -c "sleep 15 && go run main.go"
+
+  app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rukunos-app-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8086}
+      NITRO_PRESET: node-server
+    depends_on:
+      - api
+    networks:
+      - rukunos-network
+
+networks:
+  rukunos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+
