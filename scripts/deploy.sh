@@ -38,9 +38,18 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if docker-compose is available
-if ! command -v docker-compose &> /dev/null; then
-    log_error "docker-compose tidak ditemukan. Silakan install Docker Compose terlebih dahulu."
+# Detect docker compose command (support both v1 and v2)
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+    log_info "Menggunakan Docker Compose v2 (docker compose)"
+elif command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+    log_info "Menggunakan Docker Compose v1 (docker-compose)"
+else
+    log_error "Docker Compose tidak ditemukan!"
+    log_error "Silakan install Docker Compose terlebih dahulu:"
+    log_error "  - Docker Compose v2: sudo apt install docker-compose-plugin"
+    log_error "  - Docker Compose v1: https://docs.docker.com/compose/install/"
     exit 1
 fi
 
@@ -71,7 +80,7 @@ setup() {
     
     # Start database first
     log_info "Starting database container..."
-    docker-compose -f $COMPOSE_FILE up -d db
+    $DOCKER_COMPOSE -f $COMPOSE_FILE up -d db
     
     log_info "Menunggu database siap..."
     sleep 10
@@ -84,7 +93,7 @@ migrate() {
     log_info "Menjalankan database migrations..."
     
     # Check if database is running
-    if ! docker-compose -f $COMPOSE_FILE ps db | grep -q "Up"; then
+    if ! $DOCKER_COMPOSE -f $COMPOSE_FILE ps db | grep -q "Up"; then
         log_error "Database container tidak berjalan. Jalankan: ./deploy.sh setup"
         exit 1
     fi
@@ -131,9 +140,9 @@ migrate() {
         
         log_info "Running migration: $migration"
         
-        if docker-compose -f $COMPOSE_FILE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$MIGRATION_FILE" 2>&1 | grep -q "ERROR"; then
+        if $DOCKER_COMPOSE -f $COMPOSE_FILE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$MIGRATION_FILE" 2>&1 | grep -q "ERROR"; then
             # Check if it's a "already exists" error (which is OK)
-            if docker-compose -f $COMPOSE_FILE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$MIGRATION_FILE" 2>&1 | grep -q "already exists\|duplicate\|already exists"; then
+            if $DOCKER_COMPOSE -f $COMPOSE_FILE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$MIGRATION_FILE" 2>&1 | grep -q "already exists\|duplicate\|already exists"; then
                 log_warn "  Migration sudah diterapkan, skipping..."
             else
                 log_error "  Migration $migration gagal!"
@@ -150,23 +159,23 @@ migrate() {
 # Start function
 start() {
     log_info "Starting semua services..."
-    docker-compose -f $COMPOSE_FILE up -d --build
+    $DOCKER_COMPOSE -f $COMPOSE_FILE up -d --build
     log_info "Services sudah di-start!"
-    log_info "Cek status: docker-compose -f $COMPOSE_FILE ps"
-    log_info "Cek logs: docker-compose -f $COMPOSE_FILE logs -f"
+    log_info "Cek status: $DOCKER_COMPOSE -f $COMPOSE_FILE ps"
+    log_info "Cek logs: $DOCKER_COMPOSE -f $COMPOSE_FILE logs -f"
 }
 
 # Stop function
 stop() {
     log_info "Stopping semua services..."
-    docker-compose -f $COMPOSE_FILE down
+    $DOCKER_COMPOSE -f $COMPOSE_FILE down
     log_info "Services sudah di-stop!"
 }
 
 # Restart function
 restart() {
     log_info "Restarting semua services..."
-    docker-compose -f $COMPOSE_FILE restart
+    $DOCKER_COMPOSE -f $COMPOSE_FILE restart
     log_info "Services sudah di-restart!"
 }
 
@@ -184,15 +193,15 @@ update() {
     
     # Rebuild and restart
     log_info "Rebuilding containers..."
-    docker-compose -f $COMPOSE_FILE down
-    docker-compose -f $COMPOSE_FILE up -d --build
+    $DOCKER_COMPOSE -f $COMPOSE_FILE down
+    $DOCKER_COMPOSE -f $COMPOSE_FILE up -d --build
     
     log_info "Update selesai!"
 }
 
 # Logs function
 logs() {
-    docker-compose -f $COMPOSE_FILE logs -f
+    $DOCKER_COMPOSE -f $COMPOSE_FILE logs -f
 }
 
 # Backup function
@@ -211,7 +220,7 @@ backup() {
     
     BACKUP_FILE="$BACKUP_DIR/backup_$(date +%Y%m%d_%H%M%S).sql"
     
-    docker-compose -f $COMPOSE_FILE exec -T db pg_dump -U "$DB_USER" "$DB_NAME" > "$BACKUP_FILE"
+    $DOCKER_COMPOSE -f $COMPOSE_FILE exec -T db pg_dump -U "$DB_USER" "$DB_NAME" > "$BACKUP_FILE"
     
     if [ $? -eq 0 ]; then
         log_info "Backup berhasil: $BACKUP_FILE"
